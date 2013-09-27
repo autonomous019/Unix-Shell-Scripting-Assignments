@@ -1,0 +1,84 @@
+Script started on Tue May 10 15:39:56 2011
+/students/mmccarr1/cs160b/homework> #************ ASsmt    smt03 parrt  t One extra credit 1 Mike McCarron
+/students/mmccarr1/cs160b/homework> date
+Tue May 10 15:40:36 PDT 2011
+/students/mmccarr1/cs160b/homework> pwd
+/students/mmccarr1/cs160b/homework
+/students/mmccarr1/cs160b/homework> id
+uid=21481(mmccarr1) gid=580(b20103) groups=3021(c36505),3110(c39726),3120(c39809)
+/students/mmccarr1/cs160b/homework> rm Managers
+/students/mmccarr1/cs160b/homework> ./newmanager
+enter a department number ? (hit enter to exit): 5
+Enter Department Name: Fiver Five
+Enter Manager Name: Fightin Fitz
+Manager  Id Number: 555
+
+***********************************************************
+Mangers Has been Updated, results:
+Jane Scientist:14:1:Research and Development
+Charlie Ceo:1:3:Office of the President
+Sally Sliderule:622:4:Engineering
+Fightin Fitz:555:5:Fiver Five
+Lawrence Friendly:833:7:Administration
+Joe Worker:489:14:Manufacturing
+Mary Money:893:17:Payroll
+Mary Mailwoman:17:45:Shipping and Receiving
+Mr. Ed:5:50:Health
+Jeri Juntz:552:77:Maintenance
+Sammy Screw:78:98:Assembly
+Joe Piscipo:4532:200:Quality Assurance
+
+
+enter a department number ? (hit enter to exit): 73928472397924
+Enter Department Name: Foo Bar
+Enter Manager Name: Freed Foobar
+Manager  Id Number: 12345
+
+***********************************************************
+Mangers Has been Updated, results:
+Jane Scientist:14:1:Research and Development
+Charlie Ceo:1:3:Office of the President
+Sally Sliderule:622:4:Engineering
+Fightin Fitz:555:5:Fiver Five
+Lawrence Friendly:833:7:Administration
+Joe Worker:489:14:Manufacturing
+Mary Money:893:17:Payroll
+Mary Mailwoman:17:45:Shipping and Receiving
+Mr. Ed:5:50:Health
+Jeri Juntz:552:77:Maintenance
+Sammy Screw:78:98:Assembly
+Joe Piscipo:4532:200:Quality Assurance
+Freed Foobar:12345:73928472397924:Foo Bar
+
+
+enter a department number ? (hit enter to exit): 77
+Name: Jeri Juntz -- Emp Id: 552 -- Dept: 77 -- Dept Id: Maintenance 
+Dept Id exists, replace? (yes/no)  yes
+Enter Department Name: Maintenancce and Physical Plant
+Enter Manager Name: Mike Mainte ainer
+Manager  Id Number: 678
+
+***********************************************************
+Mangers Has been Updated, results:
+Jane Scientist:14:1:Research and Development
+Charlie Ceo:1:3:Office of the President
+Sally Sliderule:622:4:Engineering
+Fightin Fitz:555:5:Fiver Five
+Lawrence Friendly:833:7:Administration
+Joe Worker:489:14:Manufacturing
+Mary Money:893:17:Payroll
+Mary Mailwoman:17:45:Shipping and Receiving
+Mr. Ed:5:50:Health
+Mike Maintainer:678:77:Maintenancce and Physical Plant
+Sammy Screw:78:98:Assembly
+Joe Piscipo:4532:200:Quality Assurance
+Freed Foobar:12345:73928472397924:Foo Bar
+
+
+enter a department number ? (hit enter to exit): 3
+Name: Charlie Ceo -- Emp Id: 1 -- Dept: 3 -- Dept Id: Office of the President 
+Dept Id exists, replace? (yes/no)  no
+enter a department number ? (hit enter to exit): 
+/students/mmccarr1/cs160b/homework> exit
+
+script done on Tue May 10 15:43:27 2011

@@ -1,0 +1,118 @@
+#!/bin/bash
+#
+#
+#programmer: Mike McCarron
+#assignment: Asmt03 with EC 1
+#class: T,Th 7-9pm
+#program: newmanager
+#options: none
+#arguments: none
+#what it is: program updates a Managers file to enter new manager, dept info or update existing data
+#algorithm: 1. grab Managers file from central location, if on Linux grab from linux specific local
+# make local copy to work with
+# then prompt for dept number to add or replace
+# if data exists for dept number validate if overwrite is ok
+# if not exit back to original prompt for dept number
+# if overwrite is okay then update record with appropriate information
+# update temp file with new data then write to Managers file
+# to quite you must answer with an empty response to department id number prompt, just hit enter at prompt
+#
+#
+#
+
+error () {
+    # error: output an error message and return
+    # the error messages contain the program name
+    # and are written to standard error
+
+    local prog=$(basename $0)
+    echo -e "$prog:ERROR: $*">&2
+}
+
+fatal() {
+    # fatal: output an error message and then exit
+    # the error() function is used.
+    error "$*"
+    # if you want to output a message about how to successfully
+    # run your program (called a 'usage message'), this would
+    # be the place to do it
+
+    # now exit with an error
+    exit 1
+}
+
+askQuestion(){
+
+    read -p "$1? (hit enter to exit): " ans
+    if [ -z $ans ]; then
+        exit 0
+    fi
+
+}
+
+
+if uname | grep -qi linux; then
+    Sourcedir=/home/pub/cs160bgb/asmt03
+else
+    Sourcedir=/pub/cs/gboyd/cs160b/asmt03
+fi
+
+if [ -e Managers ]; then
+    filepath=Managers
+else
+    filepath="$Sourcedir/Managers"
+    cp $filepath Managers
+fi
+
+[ -e Managers -a -f Managers -a -w Managers ] || fatal "file is not existent or writable or a file"
+ans="yes"
+while [ ! -z $ans ]; do
+    
+    askQuestion "enter a department number "
+    deptno=`cut -d: -f3 Managers | grep "^$ans$"` 
+    dept_count=`cut -d: -f3 Managers | grep -c "^$ans$"`
+    #num=$(echo "$deptno" | wc -c)
+    if [ "$dept_count" -gt "0" ]; then
+        lineno=`cut -d: -f3 Managers | grep -n "^$ans$"`                                                     
+        linetoprint=`echo "$lineno" | cut -d: -f1`
+        linetoprint=$(head -"$linetoprint" Managers |  tail -1 )
+        name=$(echo "$linetoprint" | cut -d: -f1)
+        emp_id=$(echo "$linetoprint" | cut -d: -f2)
+        dept_name=$(echo "$linetoprint" | cut -d: -f3)
+        dept_id=$(echo "$linetoprint" | cut -d: -f4)
+        linetoprint="Name: $name -- Emp Id: $emp_id -- Dept: $dept_name -- Dept Id: $dept_id "
+        echo "$linetoprint"
+        read -p "Dept Id exists, replace? (yes/no)  " perm
+        if [ "$perm" = "yes" ]; then
+            lineno=`cut -d: -f3 Managers | grep -n "^$deptno$"`                                                     
+            linetodelete=`echo "$lineno" | cut -d: -f1`
+            export TMPFILE=.
+            TMPFILE=$(mktemp)
+            touch "$TMPFILE"
+            $(sed ${linetodelete}d Managers > $TMPFILE) 
+            mv $TMPFILE Managers
+            rm -f $TMPFILE
+        else
+            continue
+        fi
+
+    fi
+
+    read -p "Enter Department Name: " dept_name
+    read -p "Enter Manager Name: " name
+    read -p "Manager  Id Number: " id_number 
+    record="$name:$id_number:$ans:$dept_name" 
+    $(echo "$record" >> Managers)
+    sort -n -t':' +2 Managers -o Managers
+
+    echo ""
+    echo "***********************************************************"
+    echo "Mangers Has been Updated, results:"
+    cat Managers 
+    echo ""
+    echo ""
+
+done
+
+exit 0
+

@@ -1,0 +1,49 @@
+#!/bin/bash
+
+#mike mccarron
+#cs160b
+#T, TH 7pm
+
+
+#these environment vars must be set or error msg displayed
+HOME=${HOME:? must set Home env variable}
+PATH=${PATH:? PATH must be set}
+SHELL=${SHELL:? SHELL MUst be set}
+
+#get the users home dir
+home_dir=$(echo $HOME)
+#get the users log id
+log_id=$(echo $LOGNAME)
+#get the users default group
+def_group=$(groups | cut -d' ' -f1)
+#get the users shell
+log_shell=$(echo $SHELL)
+#get the env vars number set
+no_env_vars=$(env | wc -l)
+
+#get the users quota information
+kb_space=$(quota -v | sed -n 3p | tr -s " " | cut -d' ' -f2)
+max_space=$(quota -v | sed -n 3p | tr -s " " | cut -d' ' -f3)
+empty_space=$(( max_space - kb_space ))
+space_limit=$(quota -v | sed -n 3p | tr -s " " | cut -d' ' -f4)
+over_limit=$(( space_limit - max_space ))
+#get the files information from the quota command
+no_of_files=$(quota -v | sed -n 3p | tr -s " " | cut -d' ' -f5)
+no_of_files_allowed=$(quota -v | sed -n 3p | tr -s " " | cut -d' ' -f6)
+no_of_files_remaining=$(( no_of_files_allowed - no_of_files ))
+temp_allowed=$(quota -v | sed -n 3p | tr -s " " | cut -d' ' -f7)
+over_temp_allowed=$(( temp_allowed - no_of_files_allowed ))
+
+#echo the output
+echo "path to your home directory is $home_dir"
+echo "your login id is $log_id. Your default group is $def_group."
+echo "Your login shell is $log_shell. You have $no_env_vars ENVIRONMENT variables set"
+
+echo "You have currently $kb_space KB in use.  You have $max_space available to use."
+
+echo "You have $empty_space available.  You have an overage of $over_limit KB "
+echo "that can be used temporarily when you go over the limit"
+
+echo "You have $no_of_files files in use. "
+echo "You have $no_of_files_remaining file space in your file quota."
+echo "You can go over your limit by $over_temp_allowed files. "

@@ -1,0 +1,94 @@
+#!/bin/bash
+
+error () {
+    # error: output an error message and return
+    # the error messages contain the program name
+    # and are written to standard error
+
+    local prog=$(basename $0)
+    echo -e "$prog:ERROR: $*">&2
+}
+
+fatal() {
+    # fatal: output an error message and then exit
+    # the error() function is used.
+    error "$*"
+    # if you want to output a message about how to successfully
+    # run your program (called a 'usage message'), this would
+    # be the place to do it
+
+    # now exit with an error
+    exit 1
+}
+
+if [ $# -ne 2 ]; then
+     fatal "Invalide Number of Arguments: Usage chk -<option> objectname"
+fi
+
+routine="$1"
+objectname="$2"
+
+if [ $routine = "-f" ]; then
+
+    arg="$objectname"
+    if [ -L  "$arg" ] && [ -e "$arg" ]; then
+        
+        object_type="'$arg' is a symbolic link "
+
+
+    elif [ -d "$arg" ] && [ -e "$arg" ]; then
+        
+        object_type="'$arg' is a directory"
+    
+
+
+    elif [ -f "$arg" ] && [ -e "$arg" ]; then
+        object_type="'$arg' is a file"
+ 
+       
+    else
+        fatal "$objectname not a known file type or does not exist"
+    fi
+
+
+ 
+        if [ -x "$arg" ]; then
+            exec="executable"
+        else
+            exec="Not executable"
+        fi
+        if [ -w "$arg" ]; then
+            writ="writable"
+        else
+            writ="Not writable"
+        fi
+        if [ -r "$arg" ]; then
+            read="readable"
+        else
+            read="Not readable"
+        fi
+        echo "$object_type Permissions: $exec -- $writ -- $read"
+
+
+
+
+
+
+elif [ $routine = "-u" ]; then
+     
+     $(grep -q "^$objectname:" /etc/passwd) || fatal "no such user '$objectname'"
+     $(who | grep "^$objectname[[:space:]]" > /dev/null) && echo "$objectname is logged in"  || echo "last logged in $(last -1 "$objectname" | tr -s "[[:space:]]" "" | cut -d" " -f3-9) " 
+
+     user_directory=$(grep "^$objectname:" /etc/passwd | cut -d":" -f6) && echo "home directory is $user_directory" || error "$objectname home directory not found"
+
+
+else
+     fatal "wrong option given use -u for user or -f for file"
+fi
+
+
+
+
+
+
+

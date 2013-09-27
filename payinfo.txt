@@ -1,0 +1,185 @@
+#!/bin/bash
+#
+#programmer: Mike McCarron
+#homework: asmt04
+#
+#program: payinfo
+#options: -d for directory, path to directory: payinfo -d /some/thing
+#
+#purpose: process payroll files to produce payroll stats
+#
+#first, we grab payroll files in format 'MMDDYY'
+#second, we grab department files with payrates, format 'D/E000'
+#third, scan path for valid file formats and aggregate into one
+#payroll file, then gather department files into one file
+#fourth, grab hours worked from payroll file, calculate rate based
+#on info in department files, f3 and f4. 
+#fifth, sum totals to give results based on employee
+#sixth, gather totals into grand totals for regular and overtime hrs
+#
+#sample data: 
+#  payroll: Employee ID#Hours Worked#Overtime Hours Worked#Date
+#  dept: Employee Name:Department:Employee ID:Pay Rate:Overtime Pay Rat
+#
+#
+
+error () {
+    # error: output an error message and return
+    # the error messages contain the program name
+    # and are written to standard error
+
+    local prog=$(basename $0)
+    echo -e "$prog:ERROR: $*">&2
+}
+
+fatal() {
+    # fatal: output an error message and then exit
+    # the error() function is used.
+    error "$*"
+    # if you want to output a message about how to successfully
+    # run your program (called a 'usage message'), this would
+    # be the place to do it
+
+    # now exit with an error
+    exit 1
+}
+
+
+
+isalpha(){
+    echo "$1" | grep -qE '[[:alpha:]]' && return 0 || return 1 
+}
+ 
+arg=$1
+path=$2
+#process arguments
+case "$arg" in
+-d)    dflag=true;;
+*)     fatal "sorry wrong argument. Usage: payinfo -d /your/path/file ";;
+esac
+
+#check if xr on directory and if is dir
+if [ ! -d "$path" -o ! -r "$path" -o ! -x "$path" ]; then
+    fatal "'$path' is not a directory or not readable, invalid"
+fi
+
+if [ $# -ne 2 ]; then
+    fatal "invalid arguments"
+fi
+
+
+
+
+#setup temp files for writing
+export TMPFILE=.
+TMPFILE=$(mktemp)
+touch "$TMPFILE"
+export TMPFILE2=.
+TMPFILE2=$(mktemp)
+touch "$TMPFILE2"
+
+#loop for processing payroll files
+for f in $(ls "$path"); do
+    len=$( echo "$f" | wc -c  ) 
+    if [ "$len" -eq "7" ]; then
+       if ! isalpha "$f"; then
+           blurb=$(cat "$path/$f") 
+           if ! isalpha "$blurb"; then
+
+               fragment=$( echo "$blurb" | cut -d"#" -f4) 
+               year=${fragment:4}
+               month=${fragment:0:2}
+               if [[ "$month" < "07" ]]; then
+                     $( echo "$blurb" >> $TMPFILE)
+               fi
+           fi
+        fi
+   else
+   #and for processing department files
+           if ! echo "$f" | grep '^[DE][[:digit:]][[:digit:]]*$' >/dev/null ; then
+              echo -n ""
+           else
+             dept_blurb=$(cat "$path/$f")
+             if ! echo "$dept_blurb" | grep '_' >/dev/null ; then
+                 $( echo "$dept_blurb" >> $TMPFILE2) 
+             fi
+           fi
+   fi 
+done
+
+#sort temp files                      
+$(cut -d"#" -f1 $TMPFILE > id_temps)
+$( sort -nu id_temps -o id_temps)
+$( sort -u $TMPFILE2 -o $TMPFILE2 )
+$( sort -u $TMPFILE -o $TMPFILE )
+
+cp $TMPFILE payroll
+
+payroll_len=$( cat $TMPFILE | wc -l)
+dept_len=$( cat $TMPFILE2 | wc -l )
+
+if [ "$payroll_len" == "0" ]; then
+    fatal "invalid files types in this directory"
+fi
+if [ "$dept_len" == "0" ]; then
+    fatal "invalid files types in this directory"
+fi
+
+#once we have all files and valid, then process files by employee
+emp_count=0
+total_reghrs=0
+total_overhurs=0
+for i in $( cat id_temps ); do 
+    emp_total=0
+    error=false 
+    for x in $( grep  "^$i#" payroll ); do 
+        reg_hours=$( echo "$x" | cut -d"#" -f2)
+        over_hours=$( echo "$x" | cut -d"#" -f3)
+        if [ -z "$reg_hours" ]; then
+             reg_hours=0
+        fi
+        if [ -z "$over_hours" ]; then
+             over_hours=0
+        fi
+        if [ -z "$reg_hours" -a -z "$over_hours" ]; then
+             error "$i does not have department records"
+        fi 
+        #see if there is a dept record for the emp in payroll file 
+        id_exists=$( cat $TMPFILE2 | grep ":$i:" | cut -d: -f3 )
+        if [ -z "$id_exists" ]; then
+             error=true 
+             continue
+        fi       
+
+
+        reg_rate=$( cat $TMPFILE2 | grep ":$i:" | cut -d: -f4 ) 
+        over_rate=$(cat $TMPFILE2 | grep ":$i:" | cut -d: -f5 )
+        reg_total=$( echo "scale=2; $reg_hours*$reg_rate" | bc ) 
+        over_total=$( echo "scale=2; $over_hours*$over_rate" | bc )
+        worker=$( cat $TMPFILE2 | grep ":$i:" | cut -d: -f1 )
+        period=$( echo "$x" | cut -d"#" -f4 )
+        
+        sub_total=$( echo "scale=2; $reg_total+$over_total" | bc )
+        emp_total=$( echo "scale=2; $emp_total+$sub_total" | bc )
+        total_reghrs=$( echo "scale=2; $total_reghrs+$reg_total" | bc )
+        total_overhurs=$( echo "scale=2; $total_overhurs+$over_total" | bc )
+    done  
+    if [ "$error" == "false" ]; then
+        echo "Employe $i ($worker) earned $emp_total during the period"
+        emp_count=$(( emp_count + 1))
+    else
+        error "'$i' dept record does not exist for emp id"
+    fi 
+        
+    error=false
+
+done
+
+echo "******TOTALS*********"
+echo "Employees paid: $emp_count "
+echo "Regular pay: $total_reghrs "
+echo "Overtime pay: $total_overhurs " 
+rm $TMPFILE
+rm $TMPFILE2
+rm payroll
+exit 0
